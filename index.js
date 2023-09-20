@@ -81,12 +81,13 @@ app.post('/api/shorturl', async (req, res) => {
 });
          
 app.get('/api/shorturl/:shortId', (req, res) => {
-    UrlModel.findOne({ short_url: req.params.shortId }, (err, data) => {
-        if (err || !data) {
-            return res.status(404).json({ error: 'URL not found' });
-        }
+    UrlModel.findOne({ short_url: req.params.shortId })
+      .then((data) => {
         res.redirect(data.original_url);
-    });
+      })
+      .catch((err) => {
+        return res.status(404).json({ error: 'invalid url' });
+      })
 });
 
 app.listen(port, function() {
