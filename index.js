@@ -42,7 +42,7 @@ const Counter = mongoose.model('Counter', counterSchema);
 
 Counter.findOne({_id: 'urlCount'}).then(counter => {
     if(!counter){
-        const newCounter = new Counter({_id: 'urlCount', count: 0});
+        const newCounter = new Counter({_id: 'urlCount'});
         newCounter.save();
     }
 });
@@ -53,35 +53,33 @@ app.get('/api/hello', function(req, res) {
 });
 
 app.post('/api/shorturl', async (req, res) => {
+  
   const originalUrl = req.body.url;
-  const urlObject = new URL(originalUrl);
-
   try {
+  const urlObject = new URL(originalUrl);
+  console.log(urlObject, originalUrl)
+  
     await dns.promises.lookup(urlObject.hostname);
 
-    const counter = await Counter.findOneAndUpdate({_id: 'urlCount'}, {$inc: {count: 1}}, {new: true, upsert: true});
-    const shortUrl = counter.count;
-
-    const urlEntry = new UrlModel({
+    Counter.findOneAndUpdate({_id: 'urlCount'}, {$inc: {count: 1}}, {new: true, upsert: true})
+      .then((counter) => {
+        const shortUrl = counter.count;
+        const urlEntry = new UrlModel({
         original_url: originalUrl,
         short_url: shortUrl
-    });
-
-    await urlEntry.save();
-
-    res.json({
+        });
+        urlEntry.save();
+        res.json({
         "original_url": originalUrl,
         "short_url": shortUrl
-    });
+        });
+      });
   } catch (err) {
-    if (err.code === 'ENOTFOUND') {
-      res.status(400).json({ error: 'Invalid URL' });
-    } else {
-      res.status(500).json({ error: 'Server error' });
+      console.log(err)
+      res.status(400).json({ error: 'invalid url' });
     }
-  }
 });
-
+         
 app.get('/api/shorturl/:shortId', (req, res) => {
     UrlModel.findOne({ short_url: req.params.shortId }, (err, data) => {
         if (err || !data) {
@@ -94,3 +92,4 @@ app.get('/api/shorturl/:shortId', (req, res) => {
 app.listen(port, function() {
   console.log(`Listening on port ${port}`);
 });
+
