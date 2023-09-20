@@ -57,7 +57,6 @@ app.post('/api/shorturl', async (req, res) => {
   const originalUrl = req.body.url;
   try {
   const urlObject = new URL(originalUrl);
-  console.log(urlObject, originalUrl)
   
     await dns.promises.lookup(urlObject.hostname);
 
@@ -75,8 +74,7 @@ app.post('/api/shorturl', async (req, res) => {
         });
       });
   } catch (err) {
-      console.log(err)
-      res.status(400).json({ error: 'invalid url' });
+      res.json({ error: 'invalid url' });
     }
 });
          
